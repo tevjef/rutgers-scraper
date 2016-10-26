@@ -1,0 +1,13 @@
+workspace:
+  base: /go
+  path: src/uct
+
+pipeline:
+  core:
+    image: golang:1.7-alpine
+    environment:
+      - GOPATH=/go
+    commands:
+      - go version
+      - go test -v
+      - go build
