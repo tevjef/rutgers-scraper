@@ -1,6 +1,6 @@
 workspace:
   base: /go
-  path: src/uct
+  path: src/rutgers
 
 pipeline:
   core:
@@ -11,3 +11,37 @@ pipeline:
       - go version
       - go test -v
       - go build
+    when:
+      event: [push, pull_request, tag, deployment]
+  build:
+    image: library/golang:1.7
+    environment:
+      - GOPATH=/go
+    commands:
+      - mkdir /go/dist && cd /go/dist
+      - (export GOOS=linux GOARCH=amd64; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+      - (export GOOS=linux GOARCH=386; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+      - (export GOOS=linux GOARCH=arm; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+      - (export GOOS=linux GOARCH=arm64; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+      - (export GOOS=windows GOARCH=amd64; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers.exe --remove-files)
+      - (export GOOS=windows GOARCH=386; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers.exe --remove-files)
+      - (export GOOS=darwin GOARCH=amd64; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+      - (export GOOS=darwin GOARCH=386; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
+    when:
+      branch: master
+
+  release:
+    image: library/golang:1.7
+    environment:
+      - GOPATH=/go
+    commands:
+      - git fetch --tags
+      - git fetch origin
+      - go get github.com/aktau/github-release
+      - export GITHUB_TOKEN=$GITHUB_API_TOKEN
+      - TAG=$(git describe --abbrev=0 --tags)
+      - github-release release --user tevjef --repo rutgers-scraper --tag "$TAG" --name "rutgers-scraper-$TAG" || true
+      - cd /go/dist
+      - for i in *; do github-release upload --user tevjef --repo rutgers-scraper --tag $TAG --name $i --file $i || true; done
+    when:
+      branch: master
