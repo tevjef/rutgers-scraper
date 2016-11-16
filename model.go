@@ -126,10 +126,10 @@ func (s Period) String() string {
 }
 
 const (
-	FALL   = "fall"
-	SPRING = "spring"
-	SUMMER = "summer"
-	WINTER = "winter"
+	Fall = "fall"
+	Spring = "spring"
+	Summer = "summer"
+	Winter = "winter"
 )
 
 const (
@@ -182,15 +182,15 @@ func (r Registration) dayOfYear() int {
 func (r Registration) season() string {
 	switch r.Period {
 	case InFall.String():
-		return FALL
+		return Fall
 	case InSpring.String():
-		return SPRING
+		return Spring
 	case InSummer.String():
-		return SUMMER
+		return Summer
 	case InWinter.String():
-		return WINTER
+		return Winter
 	default:
-		return SUMMER
+		return Summer
 	}
 }
 
@@ -206,19 +206,19 @@ func ResolveSemesters(t time.Time, registration []*Registration) *ResolvedSemest
 
 	fall := &Semester{
 		Year:   t.Year(),
-		Season: FALL}
+		Season: Fall}
 
 	winter := &Semester{
 		Year:   t.Year(),
-		Season: WINTER}
+		Season: Winter}
 
 	spring := &Semester{
 		Year:   t.Year(),
-		Season: SPRING}
+		Season: Spring}
 
 	summer := &Semester{
 		Year:   t.Year(),
-		Season: SUMMER}
+		Season: Summer}
 
 	// Spring: Winter - StartFall
 	if (month >= winterReg.month() && day >= winterReg.day()) || (month <= startFallReg.month() && day < startFallReg.day()) {

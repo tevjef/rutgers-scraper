@@ -43,7 +43,7 @@ func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	*campusFlag = strings.ToUpper(*campusFlag)
 	app.Name = app.Name + "-" + strings.ToLower(*campusFlag)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 
 	reader := marshalMessage(getCampus(*campusFlag))
 	// Write to stdout
@@ -67,7 +67,7 @@ func getCampus(campus string) University {
 	}
 
 	for _, semester := range semesters {
-		if semester.Season == WINTER {
+		if semester.Season == Winter {
 			semester.Year++
 		}
 
@@ -94,8 +94,8 @@ func getCampus(campus string) University {
 		wg.Wait()
 
 		university.Subjects = append(university.Subjects, buildSubjects(subjects)...)
-
 	}
+
 
 	return university
 }
@@ -104,13 +104,13 @@ var httpClient = &http.Client{
 	Timeout: 15 * time.Second,
 }
 
-func (rr subjectRequest) requestSubjects() (subjects []*RSubject) {
-	var url = fmt.Sprintf("%s/subjects.json?semester=%s&campus=%s&level=U%%2CG", rr.host, parseSemester(rr.semester), rr.campus)
+func (sr subjectRequest) requestSubjects() (subjects []*RSubject) {
+	var url = fmt.Sprintf("%s/subjects.json?semester=%s&campus=%s&level=U%%2CG", sr.host, parseSemester(sr.semester), sr.campus)
 	if err := getData(url, &subjects); err == nil {
 		for i := range subjects {
 			subject := subjects[i]
-			subject.Season = rr.semester.Season
-			subject.Year = int(rr.semester.Year)
+			subject.Season = sr.semester.Season
+			subject.Year = int(sr.semester.Year)
 			subject.clean()
 		}
 	}
@@ -198,11 +198,12 @@ func buildSections(rutgerSections []*RSection) (s []*Section) {
 
 func getData(url string, model interface{}) error {
 	var success bool
-	log.Debugln(url)
+	modeType := fmt.Sprintf("%T", model)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add("User-Agent", "Go/rutgers-scraper")
-
 	for i := 0; i < 3; i++ {
+		startTime := time.Now()
+		log.WithFields(log.Fields{"retry": i, "url": url}).Debug(modeType + " request")
 		time.Sleep(time.Duration(i*2) * time.Second)
 		resp, err := httpClient.Do(req)
 		if err != nil {
@@ -212,6 +213,7 @@ func getData(url string, model interface{}) error {
 			log.Errorf("Retrying %d after error: %s\n", i, err)
 			continue
 		} else {
+			log.WithFields(log.Fields{"content-length": resp.ContentLength, "status": resp.Status, "url": url, "response_time": time.Since(startTime).Seconds()}).Debug(modeType + " response")
 			success = true
 			break
 		}
@@ -226,13 +228,13 @@ func getData(url string, model interface{}) error {
 
 func parseSemester(semester Semester) string {
 	year := strconv.Itoa(semester.Year)
-	if semester.Season == FALL {
+	if semester.Season == Fall {
 		return "9" + year
-	} else if semester.Season == SUMMER {
+	} else if semester.Season == Summer {
 		return "7" + year
-	} else if semester.Season == SPRING {
+	} else if semester.Season == Spring {
 		return "1" + year
-	} else if semester.Season == WINTER {
+	} else if semester.Season == Winter {
 		return "0" + year
 	}
 	return ""
