@@ -28,8 +28,7 @@ pipeline:
       - (export GOOS=darwin GOARCH=amd64; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
       - (export GOOS=darwin GOARCH=386; go build rutgers && tar -czf rutgers-scraper-$GOOS-$GOARCH.tar.gz rutgers --remove-files)
     when:
-      branch: master
-      event: [tag]
+      event: [push, pull_request, tag, deployment]
 
   release:
     image: library/golang:1.7
