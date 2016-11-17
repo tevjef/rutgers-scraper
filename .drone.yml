@@ -44,4 +44,4 @@ pipeline:
       - cd /go/dist
       - for i in *; do github-release upload --user tevjef --repo rutgers-scraper --tag $TAG --name $i --file $i || true; done
     when:
-      branch: master
+      event: [tag]
